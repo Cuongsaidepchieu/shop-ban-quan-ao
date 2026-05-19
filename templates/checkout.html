@@ -1,0 +1,53 @@
+{% extends 'layout.html' %}
+{% block content %}
+<div class="row">
+  <div class="col-lg-7 mb-4">
+    <div class="card p-4 shadow-sm">
+      <h2>Thanh toán</h2>
+      <form method="post">
+        {{ form.hidden_tag() }}
+        <div class="mb-3">
+          {{ form.fullname.label(class_='form-label') }}
+          {{ form.fullname(class_='form-control') }}
+        </div>
+        <div class="mb-3">
+          {{ form.email.label(class_='form-label') }}
+          {{ form.email(class_='form-control') }}
+        </div>
+        <div class="mb-3">
+          {{ form.phone.label(class_='form-label') }}
+          {{ form.phone(class_='form-control') }}
+        </div>
+        <div class="mb-3">
+          {{ form.address.label(class_='form-label') }}
+          {{ form.address(class_='form-control', rows='4') }}
+        </div>
+        <button type="submit" class="btn btn-primary btn-lg">Xác nhận đơn hàng</button>
+      </form>
+    </div>
+  </div>
+  <div class="col-lg-5">
+    <div class="card p-4 shadow-sm">
+      <h4>Đơn hàng</h4>
+      <ul class="list-group list-group-flush mb-3">
+        {% for item in products %}
+        <li class="list-group-item d-flex justify-content-between align-items-center">
+          <div>
+            <strong>{{ item.product.name }}</strong>
+            <div class="small text-muted">{{ item.quantity }} x {{ '{:,.0f}'.format(item.product.price) }} đ</div>
+          </div>
+          <span>{{ '{:,.0f}'.format(item.item_total) }} đ</span>
+        </li>
+        {% endfor %}
+      </ul>
+      <div class="mb-3 text-muted">
+        <div>Số sản phẩm: <strong>{{ item_count }}</strong></div>
+      </div>
+      <div class="d-flex justify-content-between fw-bold fs-5">
+        <span>Tổng cộng</span>
+        <span>{{ '{:,.0f}'.format(total) }} đ</span>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

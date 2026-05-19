@@ -1,0 +1,66 @@
+:root {
+  --primary: #1f3c88;
+  --secondary: #f8f9fa;
+  --text: #333;
+}
+
+body {
+  background: #f4f6fa;
+  color: var(--text);
+}
+
+.hero {
+  min-height: 320px;
+  background-size: cover;
+  position: relative;
+}
+
+.hero-overlay {
+  background: rgba(0, 0, 0, 0.45);
+  padding: 60px 20px;
+  border-radius: 20px;
+}
+
+.product-card img,
+.card img {
+  object-fit: cover;
+  height: 260px;
+}
+
+.hover-card:hover,
+.product-card:hover {
+  transform: translateY(-4px);
+  transition: transform .25s ease;
+}
+
+.cart-image {
+  width: 70px;
+  height: 70px;
+  object-fit: cover;
+}
+
+.card,
+.table,
+.form-control,
+.navbar {
+  border-radius: 18px;
+}
+
+.btn-primary,
+.btn-success,
+.btn-outline-primary {
+  border-radius: 12px;
+}
+
+footer {
+  background: #101828;
+}
+
+.table-responsive {
+  overflow-x: auto;
+}
+
+.list-group-item {
+  border-radius: 12px;
+  margin-bottom: 8px;
+}

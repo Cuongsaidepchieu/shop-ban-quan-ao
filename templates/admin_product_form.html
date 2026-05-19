@@ -1,0 +1,45 @@
+{% extends 'layout.html' %}
+{% block content %}
+<div class="row justify-content-center">
+  <div class="col-lg-8">
+    <div class="card shadow-sm p-4">
+      <h2>{{ action }}</h2>
+      <form method="post">
+        {{ form.hidden_tag() }}
+        <div class="mb-3">
+          {{ form.name.label(class_='form-label') }}
+          {{ form.name(class_='form-control') }}
+        </div>
+        <div class="row">
+          <div class="col-md-6 mb-3">
+            {{ form.price.label(class_='form-label') }}
+            {{ form.price(class_='form-control') }}
+          </div>
+          <div class="col-md-6 mb-3">
+            {{ form.stock.label(class_='form-label') }}
+            {{ form.stock(class_='form-control') }}
+          </div>
+        </div>
+        <div class="mb-3">
+          {{ form.category.label(class_='form-label') }}
+          {{ form.category(class_='form-control') }}
+        </div>
+        <div class="mb-3">
+          {{ form.image.label(class_='form-label') }}
+          {{ form.image(class_='form-control') }}
+        </div>
+        <div class="mb-3">
+          {{ form.description.label(class_='form-label') }}
+          {{ form.description(class_='form-control', rows='4') }}
+        </div>
+        <div class="form-check form-switch mb-3">
+          {{ form.is_featured(class_='form-check-input') }}
+          {{ form.is_featured.label(class_='form-check-label') }}
+        </div>
+        <button type="submit" class="btn btn-primary">Lưu</button>
+        <a href="{{ url_for('admin_dashboard') }}" class="btn btn-secondary ms-2">Hủy</a>
+      </form>
+    </div>
+  </div>
+</div>
+{% endblock %}

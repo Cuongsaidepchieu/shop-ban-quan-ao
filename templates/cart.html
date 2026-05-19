@@ -1,0 +1,55 @@
+{% extends 'layout.html' %}
+{% block content %}
+<h2>Giỏ hàng của bạn</h2>
+<form method="post" action="{{ url_for('update_cart') }}">
+  <div class="table-responsive">
+    <table class="table align-middle">
+      <thead class="table-light">
+        <tr>
+          <th>Sản phẩm</th>
+          <th>Giá</th>
+          <th>Số lượng</th>
+          <th>Tổng</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for item in products %}
+        <tr>
+          <td>
+            <div class="d-flex align-items-center gap-3">
+              <img src="{{ item.product.image }}" alt="{{ item.product.name }}" class="cart-image rounded">
+              <div>
+                <strong>{{ item.product.name }}</strong>
+                <p class="mb-0 text-muted">{{ item.product.category }}</p>
+              </div>
+            </div>
+          </td>
+          <td>{{ '{:,.0f}'.format(item.product.price) }} đ</td>
+          <td><input type="number" name="quantity_{{ item.product.id }}" value="{{ item.quantity }}" min="0" class="form-control form-control-sm" style="width: 90px;"></td>
+          <td>{{ '{:,.0f}'.format(item.item_total) }} đ</td>
+          <td><a href="{{ url_for('remove_from_cart', product_id=item.product.id) }}" class="btn btn-sm btn-outline-danger">Xóa</a></td>
+        </tr>
+        {% else %}
+        <tr><td colspan="5" class="text-center">Giỏ hàng trống.</td></tr>
+        {% endfor %}
+      </tbody>
+      {% if products %}
+      <tfoot>
+        <tr>
+          <td colspan="3" class="text-end fw-bold">Tổng</td>
+          <td class="fw-bold">{{ '{:,.0f}'.format(total) }} đ</td>
+          <td></td>
+        </tr>
+      </tfoot>
+      {% endif %}
+    </table>
+  </div>
+  {% if products %}
+  <div class="d-flex justify-content-between">
+    <button type="submit" class="btn btn-secondary">Cập nhật giỏ hàng</button>
+    <a href="{{ url_for('checkout') }}" class="btn btn-primary btn-lg">Tiến hành thanh toán</a>
+  </div>
+  {% endif %}
+</form>
+{% endblock %}

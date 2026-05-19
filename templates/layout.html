@@ -1,0 +1,68 @@
+<!doctype html>
+<html lang="vi">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Shop Thời Trang</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+    <link rel="stylesheet" href="/static/css/style.css">
+  </head>
+  <body>
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark shadow-sm">
+      <div class="container">
+        <a class="navbar-brand" href="{{ url_for('index') }}">Fashion Shop</a>
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+          <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarNav">
+          <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+            <li class="nav-item"><a class="nav-link" href="{{ url_for('index') }}">Trang chủ</a></li>
+            <li class="nav-item"><a class="nav-link" href="{{ url_for('cart') }}">Giỏ hàng <span class="badge bg-primary">{{ cart_quantity or 0 }}</span></a></li>
+            {% if current_user.is_authenticated and current_user.is_admin %}
+            <li class="nav-item"><a class="nav-link" href="{{ url_for('admin_dashboard') }}">Quản trị</a></li>
+            {% endif %}
+          </ul>
+          <form class="d-flex me-3" action="{{ url_for('index') }}" method="get">
+            <input class="form-control form-control-sm" type="search" name="search" placeholder="Tìm sản phẩm..." value="{{ search or '' }}">
+            <button class="btn btn-outline-light btn-sm ms-2" type="submit">Tìm</button>
+          </form>
+          <ul class="navbar-nav mb-2 mb-lg-0">
+            {% if current_user.is_authenticated %}
+            <li class="nav-item"><span class="nav-link">Xin chào, {{ current_user.name }}</span></li>
+            <li class="nav-item"><a class="nav-link" href="{{ url_for('logout') }}">Đăng xuất</a></li>
+            {% else %}
+            <li class="nav-item"><a class="nav-link" href="{{ url_for('login') }}">Đăng nhập</a></li>
+            {% endif %}
+          </ul>
+        </div>
+      </div>
+    </nav>
+    <header class="hero bg-image text-white py-5 mb-4" style="background-image:url('https://images.unsplash.com/photo-1512436991641-6745cdb1723f?auto=format&fit=crop&w=1600&q=80');">
+      <div class="container text-center hero-overlay">
+        <h1 class="display-5 fw-bold">Thời trang trẻ trung, phong cách mỗi ngày</h1>
+        <p class="lead">Khám phá bộ sưu tập áo quần mới nhất, mua sắm nhanh chóng và dễ dàng.</p>
+        <a class="btn btn-primary btn-lg" href="{{ url_for('index') }}">Xem ngay</a>
+      </div>
+    </header>
+    <main class="container mb-5">
+      {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+          {% for category, message in messages %}
+            <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+              {{ message }}
+              <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+          {% endfor %}
+        {% endif %}
+      {% endwith %}
+      {% block content %}{% endblock %}
+    </main>
+    <footer class="bg-dark text-white py-4">
+      <div class="container text-center small">
+        © 2026 Fashion Shop - Web demo Python Flask. Liên hệ: admin@shop.com
+      </div>
+    </footer>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+  </body>
+</html>
