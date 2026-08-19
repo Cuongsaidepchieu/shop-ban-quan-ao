@@ -1,55 +1,122 @@
 {% extends 'layout.html' %}
 {% block content %}
-<h2>Giỏ hàng của bạn</h2>
-<form method="post" action="{{ url_for('update_cart') }}">
-  <div class="table-responsive">
-    <table class="table align-middle">
-      <thead class="table-light">
-        <tr>
-          <th>Sản phẩm</th>
-          <th>Giá</th>
-          <th>Số lượng</th>
-          <th>Tổng</th>
-          <th></th>
-        </tr>
-      </thead>
-      <tbody>
-        {% for item in products %}
-        <tr>
-          <td>
-            <div class="d-flex align-items-center gap-3">
-              <img src="{{ item.product.image }}" alt="{{ item.product.name }}" class="cart-image rounded">
-              <div>
-                <strong>{{ item.product.name }}</strong>
-                <p class="mb-0 text-muted">{{ item.product.category }}</p>
-              </div>
+<div class="container-xl mt-4 mb-5">
+    <h3 class="fw-bold text-dark mb-4">🛒 Giỏ hàng của bạn</h3>
+
+    {% if not cart_items or cart_items|length == 0 %}
+    <!-- GIAO DIỆN GIỎ HÀNG TRỐNG -->
+    <div class="card border-0 shadow-sm rounded-4 text-center py-5 my-5 bg-white">
+        <div class="card-body">
+            <img src="https://deo.shopeemobile.com/shopee/shopee-pcmall-live-sg/cart/9bdd8040b334d31946f49e36beaf32db.png" alt="Empty Cart" style="width: 180px; opacity: 0.9; margin-bottom: 20px;">
+            <h5 class="fw-bold text-secondary mb-2">Giỏ hàng của bạn còn trống</h5>
+            <p class="text-muted mb-4 small">Bạn chưa chọn mua sản phẩm nào. Hãy dạo quanh cửa hàng nhé!</p>
+            <a href="{{ url_for('index') }}" class="btn btn-primary btn-lg rounded-pill px-5 fw-bold shadow-sm">MUA SẮM NGAY</a>
+        </div>
+    </div>
+    
+    {% else %}
+    <!-- GIAO DIỆN CÓ SẢN PHẨM -->
+    <div class="row g-4">
+        <!-- Cột danh sách sản phẩm -->
+        <div class="col-lg-8">
+            <div class="card border-0 shadow-sm rounded-4 bg-white overflow-hidden">
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th class="py-3 px-4 text-muted small">SẢN PHẨM</th>
+                                <th class="py-3 text-muted small text-center">ĐƠN GIÁ</th>
+                                <th class="py-3 text-muted small text-center">SỐ LƯỢNG</th>
+                                <th class="py-3 text-muted small text-end px-4">THÀNH TIỀN</th>
+                                <th></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% set total_cart_price = namespace(value=0) %}
+                            {% for item in cart_items %}
+                            {% set item_total = item.price * item.quantity %}
+                            {% set total_cart_price.value = total_cart_price.value + item_total %}
+                            <tr>
+                                <td class="px-4 py-3">
+                                    <div class="d-flex align-items-center gap-3">
+                                        <img src="{{ item.image }}" class="rounded-3 border" style="width: 70px; height: 70px; object-fit: cover;">
+                                        <div>
+                                            <h6 class="fw-bold mb-1"><a href="{{ url_for('product_detail', product_id=item.product_id) }}" class="text-dark text-decoration-none">{{ item.name }}</a></h6>
+                                            <small class="text-muted">Kho: {{ item.stock }}</small>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td class="text-center fw-semibold text-secondary">{{ '{:,.0f}'.format(item.price) }} đ</td>
+                                <td class="text-center">
+                                    <form action="{{ url_for('update_cart', item_id=item.id) }}" method="POST" class="d-inline-flex align-items-center border rounded-pill px-2 py-1 bg-light">
+                                        <!-- LOGIC KIỂM TRA TỒN KHO TỐI ĐA (max) -->
+                                        <input type="number" name="quantity" class="form-control form-control-sm border-0 bg-transparent text-center fw-bold shadow-none" 
+                                               value="{{ item.quantity }}" min="1" max="{{ item.stock }}" style="width: 60px;" onchange="this.form.submit()">
+                                    </form>
+                                </td>
+                                <td class="text-end fw-bold text-danger px-4">{{ '{:,.0f}'.format(item_total) }} đ</td>
+                                <td class="pe-4 text-end">
+                                    <a href="{{ url_for('remove_from_cart', item_id=item.id) }}" class="btn btn-light text-danger rounded-circle p-2 shadow-sm" title="Xóa">
+                                        <i class="bi bi-trash-fill"></i>
+                                    </a>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
             </div>
-          </td>
-          <td>{{ '{:,.0f}'.format(item.product.price) }} đ</td>
-          <td><input type="number" name="quantity_{{ item.product.id }}" value="{{ item.quantity }}" min="0" class="form-control form-control-sm" style="width: 90px;"></td>
-          <td>{{ '{:,.0f}'.format(item.item_total) }} đ</td>
-          <td><a href="{{ url_for('remove_from_cart', product_id=item.product.id) }}" class="btn btn-sm btn-outline-danger">Xóa</a></td>
-        </tr>
-        {% else %}
-        <tr><td colspan="5" class="text-center">Giỏ hàng trống.</td></tr>
-        {% endfor %}
-      </tbody>
-      {% if products %}
-      <tfoot>
-        <tr>
-          <td colspan="3" class="text-end fw-bold">Tổng</td>
-          <td class="fw-bold">{{ '{:,.0f}'.format(total) }} đ</td>
-          <td></td>
-        </tr>
-      </tfoot>
-      {% endif %}
-    </table>
-  </div>
-  {% if products %}
-  <div class="d-flex justify-content-between">
-    <button type="submit" class="btn btn-secondary">Cập nhật giỏ hàng</button>
-    <a href="{{ url_for('checkout') }}" class="btn btn-primary btn-lg">Tiến hành thanh toán</a>
-  </div>
-  {% endif %}
-</form>
+        </div>
+
+        <!-- Cột Thanh toán -->
+        <div class="col-lg-4">
+            <div class="card border-0 shadow-sm rounded-4 bg-white p-4 sticky-top" style="top: 100px;">
+                <h5 class="fw-bold mb-4 border-bottom pb-3">Tổng đơn hàng</h5>
+                <div class="d-flex justify-content-between mb-3">
+                    <span class="text-muted">Tạm tính:</span>
+                    <span class="fw-bold">{{ '{:,.0f}'.format(total_cart_price.value) }} đ</span>
+                </div>
+                <div class="d-flex justify-content-between mb-4 border-bottom pb-3">
+                    <span class="text-muted">Phí giao hàng:</span>
+                    <span class="text-success fw-bold">Miễn phí</span>
+                </div>
+                <div class="d-flex justify-content-between mb-4">
+                    <span class="fw-bold fs-5">Tổng cộng:</span>
+                    <span class="fw-bold text-danger fs-4">{{ '{:,.0f}'.format(total_cart_price.value) }} đ</span>
+                </div>
+
+                <!-- Form Đặt Hàng kèm Ô nhập Voucher -->
+                <form action="{{ url_for('checkout') }}" method="POST">
+                    <div class="mb-3">
+                        <label class="form-label small fw-bold">Địa chỉ giao hàng *</label>
+                        <input type="text" name="address" class="form-control" required placeholder="Số nhà, tên đường, phường/xã...">
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label small fw-bold">Số điện thoại *</label>
+                        <input type="text" name="phone" class="form-control" required placeholder="Nhập SĐT liên hệ...">
+                    </div>
+                    
+                    <!-- Ô NHẬP MÃ GIẢM GIÁ (VOUCHER) -->
+                    <div class="mb-3">
+                        <label class="form-label small fw-bold">Mã giảm giá (Nếu có)</label>
+                        <input type="text" name="voucher_code" class="form-control" placeholder="Nhập mã voucher (VD: GIAM50K)...">
+                    </div>
+
+                    <div class="mb-4">
+                        <label class="form-label small fw-bold">Phương thức thanh toán</label>
+                        <select name="payment_method" class="form-select">
+                            <option value="COD">Thanh toán khi nhận hàng (COD)</option>
+                            <option value="Chuyển khoản">Chuyển khoản ngân hàng (QR Code)</option>
+                        </select>
+                    </div>
+                    <button type="submit" class="btn btn-danger btn-lg w-100 rounded-pill fw-bold shadow-sm">
+                        TIẾN HÀNH ĐẶT HÀNG
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+</div>
 {% endblock %}

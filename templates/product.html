@@ -1,53 +1,163 @@
 {% extends 'layout.html' %}
 {% block content %}
-<div class="row gy-4">
-  <div class="col-lg-6">
-    <div class="card shadow-sm border-0">
-      <img src="{{ product.image }}" class="card-img-top" alt="{{ product.name }}">
-    </div>
-  </div>
-  <div class="col-lg-6">
-    <div class="card shadow-sm border-0 p-4">
-      <h2>{{ product.name }}</h2>
-      <p class="text-muted">{{ product.category }}</p>
-      <div class="mb-3">
-        <span class="fs-3 text-primary fw-bold">{{ '{:,.0f}'.format(product.price) }} đ</span>
-        <span class="badge bg-success ms-2">Còn {{ product.stock }}</span>
-      </div>
-      <p class="lead">{{ product.description }}</p>
-      <div class="d-flex gap-2 mb-4">
-        <a href="{{ url_for('add_to_cart', product_id=product.id) }}" class="btn btn-primary btn-lg">Thêm vào giỏ hàng</a>
-        <a href="{{ url_for('cart') }}" class="btn btn-outline-secondary btn-lg">Xem giỏ hàng</a>
-      </div>
-      <hr>
-      <h5>Đánh giá khách hàng</h5>
-      {% for review in reviews %}
-      <div class="border rounded p-3 mb-3">
-        <strong>{{ review.name }}</strong>
-        <p class="mb-1">{{ review.comment }}</p>
-        <small class="text-muted">{{ review.created_at }}</small>
-      </div>
-      {% else %}
-      <p class="text-muted">Chưa có đánh giá nào.</p>
-      {% endfor %}
-    </div>
-  </div>
-  <div class="col-12">
-    <div class="card shadow-sm p-4">
-      <h4>Gửi đánh giá của bạn</h4>
-      <form method="post">
-        {{ form.hidden_tag() }}
-        <div class="mb-3">
-          {{ form.name.label(class_='form-label') }}
-          {{ form.name(class_='form-control') }}
+<div class="container-xl mt-4 mb-5">
+    
+    <!-- KHỐI 1: THÔNG TIN SẢN PHẨM -->
+    <div class="row bg-white p-4 rounded-4 shadow-sm mb-5 align-items-center">
+        <div class="col-md-5 mb-4 mb-md-0 text-center">
+            <img src="{{ product.image }}" alt="{{ product.name }}" class="img-fluid rounded-4 shadow-sm" style="width: 100%; object-fit: cover; max-height: 450px;">
         </div>
-        <div class="mb-3">
-          {{ form.comment.label(class_='form-label') }}
-          {{ form.comment(class_='form-control', rows='4') }}
+        <div class="col-md-7 d-flex flex-column justify-content-center px-lg-5">
+            <div class="mb-3">
+                <span class="badge bg-secondary px-3 py-2 fs-6 rounded-pill">{{ product.category }}</span>
+            </div>
+            <h2 class="fw-bold mb-3 text-dark">{{ product.name }}</h2>
+            
+            <div class="d-flex align-items-center mb-4">
+                <h2 class="text-danger fw-bold mb-0 me-4">{{ '{:,.0f}'.format(product.price) }} đ</h2>
+                <!-- Hiển thị số lượng kho -->
+                <span class="badge bg-success-subtle text-success border border-success px-3 py-2 rounded-pill">
+                    Còn {{ product.stock }} sản phẩm
+                </span>
+            </div>
+            
+            <div class="mb-4">
+                <h6 class="fw-bold text-dark mb-2">Mô tả sản phẩm:</h6>
+                <p class="text-muted fs-6" style="line-height: 1.6;">{{ product.description }}</p>
+            </div>
+            
+            <!-- LOGIC CHẶN NÚT THÊM VÀO GIỎ HÀNG -->
+            <div class="d-flex gap-3 mt-2">
+                {% if product.stock > 0 %}
+                    <a href="{{ url_for('add_to_cart', product_id=product.id) }}" class="btn btn-primary btn-lg px-4 shadow-sm fw-bold d-flex align-items-center gap-2">
+                        <i class="bi bi-cart-plus fs-5"></i> Thêm vào giỏ hàng
+                    </a>
+                {% else %}
+                    <button class="btn btn-secondary btn-lg px-4 shadow-sm fw-bold d-flex align-items-center gap-2" disabled>
+                        <i class="bi bi-x-circle fs-5"></i> Tạm hết hàng
+                    </button>
+                {% endif %}
+                <a href="{{ url_for('cart') }}" class="btn btn-outline-secondary btn-lg px-4 shadow-sm fw-bold">Xem giỏ hàng</a>
+            </div>
         </div>
-        <button type="submit" class="btn btn-primary">Gửi đánh giá</button>
-      </form>
     </div>
-  </div>
+
+    <!-- KHỐI 2: ĐÁNH GIÁ SẢN PHẨM -->
+    <div class="row">
+        <div class="col-lg-7 mb-4">
+            <div class="bg-white p-4 rounded-4 shadow-sm h-100">
+                <h5 class="fw-bold mb-4 border-bottom pb-3 text-dark">Phản hồi từ khách hàng</h5>
+                {% if reviews %}
+                    <div class="d-flex flex-column gap-3">
+                        {% for review in reviews %}
+                        <div class="bg-light p-3 rounded-3 border-start border-4 border-primary">
+                            <div class="d-flex justify-content-between mb-2">
+                                <h6 class="mb-0 fw-bold">{{ review.name }} <span class="text-warning small ms-2">({{ review.rating }} ★)</span></h6>
+                                <small class="text-muted">{{ review.created_at }}</small>
+                            </div>
+                            <p class="mb-0 text-secondary">{{ review.comment }}</p>
+                        </div>
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    <div class="text-center py-5 text-muted">
+                        <i class="bi bi-chat-square-text fs-1 opacity-50"></i>
+                        <h6 class="mt-3">Chưa có đánh giá nào.</h6>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <div class="col-lg-5 mb-4">
+            {% if not current_user.is_authenticated %}
+                <div class="card border-0 shadow-sm p-4 bg-white text-center rounded-4">
+                    <h5 class="fw-bold mb-3">Đánh giá sản phẩm</h5>
+                    <p class="text-muted small mb-3">Vui lòng đăng nhập để viết đánh giá của bạn.</p>
+                    <a href="{{ url_for('login') }}" class="btn btn-primary rounded-pill fw-bold">Đăng nhập ngay</a>
+                </div>
+            {% elif current_user.is_admin %}
+                <div class="card border-primary p-5 text-center bg-light rounded-4">
+                    <h5 class="text-primary fw-bold">Góc Quản Trị Viên</h5>
+                    <p class="text-muted small">Admin không thể tự đánh giá.</p>
+                    <a href="{{ url_for('admin_edit_product', product_id=product.id) }}" class="btn btn-primary mt-3 rounded-pill fw-bold">⚙️ Quản lý sản phẩm</a>
+                </div>
+            {% elif user_has_reviewed %}
+                <!-- NẾU ĐÃ ĐÁNH GIÁ RỒI THÌ HIỆN THÔNG BÁO THÀNH CÔNG, ẨN FORM -->
+                <div class="card border-0 shadow-sm p-4 bg-success-subtle text-center rounded-4 border border-success">
+                    <div class="card-body py-4">
+                        <h5 class="fw-bold text-success mb-2">✅ Bạn đã đánh giá sản phẩm này</h5>
+                        <p class="text-muted small mb-0">Cảm ơn phản hồi của bạn đã giúp cửa hàng hoàn thiện hơn mỗi ngày!</p>
+                    </div>
+                </div>
+            {% else %}
+                <!-- FORM ĐÁNH GIÁ KHI CHƯA ĐÁNH GIÁ -->
+                <div class="card border-0 shadow-sm p-4 bg-white rounded-4">
+                    <h5 class="fw-bold mb-3">Viết đánh giá của bạn</h5>
+                    <form method="POST">
+                        {{ form.hidden_tag() }}
+                        <div class="mb-3">
+                            <label class="form-label fw-bold small">Mức độ hài lòng (Chọn sao):</label>
+                            <div id="star-rating" class="d-flex gap-2 fs-3 text-secondary" style="cursor: pointer;">
+                                <span data-value="1">★</span><span data-value="2">★</span><span data-value="3">★</span><span data-value="4">★</span><span data-value="5">★</span>
+                            </div>
+                            <input type="hidden" name="rating" id="rating-input" value="5">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label fw-bold small">Họ tên của bạn:</label>
+                            <input type="text" name="name" class="form-control bg-light" value="{{ current_user.name if current_user.is_authenticated else '' }}" readonly>
+                        </div>
+                        <div class="mb-4">
+                            <label class="form-label small fw-bold">Cảm nhận:</label>
+                            <textarea name="comment" class="form-control" rows="3" required placeholder="Chất liệu, form dáng..."></textarea>
+                        </div>
+                        <button type="submit" class="btn btn-primary w-100 rounded-pill fw-bold">Gửi đánh giá</button>
+                    </form>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- KHỐI 3: SẢN PHẨM LIÊN QUAN (CROSS-SELLING) -->
+    {% if related_products %}
+    <div class="row mt-5">
+        <div class="col-12">
+            <h4 class="fw-bold mb-4 text-dark border-bottom pb-3">Sản phẩm liên quan</h4>
+            <div class="row row-cols-1 row-cols-md-4 g-4">
+                {% for p in related_products %}
+                <div class="col">
+                    <div class="card h-100 border-0 shadow-sm rounded-4 overflow-hidden bg-white position-relative">
+                        <a href="{{ url_for('product_detail', product_id=p.id) }}">
+                            <img src="{{ p.image }}" class="card-img-top" style="height: 220px; object-fit: cover;" alt="{{ p.name }}">
+                        </a>
+                        <div class="card-body d-flex flex-column p-3">
+                            <span class="text-muted small mb-1">{{ p.category }}</span>
+                            <h6 class="card-title fw-bold text-dark text-truncate mb-2">
+                                <a href="{{ url_for('product_detail', product_id=p.id) }}" class="text-dark text-decoration-none">{{ p.name }}</a>
+                            </h6>
+                            <div class="mt-auto d-flex align-items-center justify-content-between">
+                                <span class="text-danger fw-bold">{{ '{:,.0f}'.format(p.price) }} đ</span>
+                                <a href="{{ url_for('product_detail', product_id=p.id) }}" class="btn btn-sm btn-outline-primary rounded-pill px-3 fw-bold">Xem</a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
 </div>
+
+<script>
+    const stars = document.querySelectorAll('#star-rating span');
+    const ratingInput = document.getElementById('rating-input');
+    stars.forEach(star => {
+        star.addEventListener('click', () => {
+            const val = star.getAttribute('data-value');
+            ratingInput.value = val;
+            stars.forEach((s, i) => s.className = i < val ? 'text-warning' : 'text-secondary');
+        });
+    });
+</script>
 {% endblock %}

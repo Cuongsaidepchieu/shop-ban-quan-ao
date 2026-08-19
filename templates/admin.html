@@ -1,61 +1,229 @@
 {% extends 'layout.html' %}
 {% block content %}
-<div class="d-flex justify-content-between align-items-center mb-4">
-  <div>
-    <h2>Trang quản trị</h2>
-    <p class="text-muted">Quản lý sản phẩm, thành viên và đơn hàng nhanh chóng.</p>
-  </div>
-  <div>
-    <a href="{{ url_for('admin_users') }}" class="btn btn-info me-2">Quản lý thành viên</a>
-    <a href="{{ url_for('admin_customers') }}" class="btn btn-secondary me-2">Quản lý khách hàng</a>
-    <a href="{{ url_for('admin_orders') }}" class="btn btn-warning me-2">Đơn hàng</a>
-    <a href="{{ url_for('admin_add_product') }}" class="btn btn-success">Thêm sản phẩm mới</a>
-  </div>
-</div>
-<div class="row g-4">
-  <div class="col-lg-7">
-    <div class="card shadow-sm p-4">
-      <h4>Sản phẩm</h4>
-      <div class="table-responsive">
-        <table class="table align-middle">
-          <thead class="table-light">
-            <tr><th>#</th><th>Tên</th><th>Giá</th><th>Kho</th><th>Hành động</th></tr>
-          </thead>
-          <tbody>
-            {% for product in products %}
-            <tr>
-              <td>{{ product.id }}</td>
-              <td>{{ product.name }}</td>
-              <td>{{ '{:,.0f}'.format(product.price) }} đ</td>
-              <td>{{ product.stock }}</td>
-              <td>
-                <a href="{{ url_for('admin_edit_product', product_id=product.id) }}" class="btn btn-sm btn-primary">Sửa</a>
-                <a href="{{ url_for('admin_delete_product', product_id=product.id) }}" class="btn btn-sm btn-outline-danger">Xóa</a>
-              </td>
-            </tr>
-            {% endfor %}
-          </tbody>
-        </table>
-      </div>
+<style>
+    .card { border-radius: 14px; border: 1px solid #eaedf2; }
+    .stat-card { transition: all 0.2s ease; }
+    .stat-card:hover { transform: translateY(-2px); box-shadow: 0 .5rem 1rem rgba(0,0,0,.05)!important; }
+    .icon-box { width: 42px; height: 42px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 1.2rem; }
+    .table th { color: #6c757d; font-weight: 600; font-size: 0.75rem; padding: 12px 16px; background-color: #f8f9fc; border-bottom: 1px solid #eaedf2; text-transform: uppercase; letter-spacing: 0.5px; }
+    .table td { vertical-align: middle; padding: 12px 16px; color: #333; font-size: 0.9rem; border-bottom: 1px solid #f1f3f5; }
+    .text-uppercase { letter-spacing: 0.5px; }
+</style>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<div class="container-xl mt-4 mb-5">
+    
+    <!-- HEADER & BỘ LỌC THỜI GIAN GỌN GÀNG -->
+    <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center mb-4 gap-3">
+        <div>
+            <h4 class="fw-bold text-dark mb-1">Tổng quan Kinh doanh</h4>
+            <p class="text-muted small mb-0">Theo dõi số liệu và tình hình hoạt động của shop</p>
+        </div>
+        <div class="d-flex align-items-center gap-3">
+            
+            <!-- FORM CHỌN THÁNG VÀ NĂM RIÊNG BIỆT -->
+            <form method="GET" action="{{ url_for('admin_dashboard') }}" class="d-flex align-items-center gap-2">
+                <span class="text-muted small fw-bold">Thời gian:</span>
+                <select name="month_num" class="form-select form-select-sm bg-white shadow-sm border fw-semibold text-secondary" style="border-radius: 8px; width: 110px;" onchange="this.form.submit()">
+                    <option value="01" {% if current_month == '01' %}selected{% endif %}>Tháng 1</option>
+                    <option value="02" {% if current_month == '02' %}selected{% endif %}>Tháng 2</option>
+                    <option value="03" {% if current_month == '03' %}selected{% endif %}>Tháng 3</option>
+                    <option value="04" {% if current_month == '04' %}selected{% endif %}>Tháng 4</option>
+                    <option value="05" {% if current_month == '05' %}selected{% endif %}>Tháng 5</option>
+                    <option value="06" {% if current_month == '06' %}selected{% endif %}>Tháng 6</option>
+                    <option value="07" {% if current_month == '07' %}selected{% endif %}>Tháng 7</option>
+                    <option value="08" {% if current_month == '08' %}selected{% endif %}>Tháng 8</option>
+                    <option value="09" {% if current_month == '09' %}selected{% endif %}>Tháng 9</option>
+                    <option value="10" {% if current_month == '10' %}selected{% endif %}>Tháng 10</option>
+                    <option value="11" {% if current_month == '11' %}selected{% endif %}>Tháng 11</option>
+                    <option value="12" {% if current_month == '12' %}selected{% endif %}>Tháng 12</option>
+                </select>
+
+                <select name="year_num" class="form-select form-select-sm bg-white shadow-sm border fw-semibold text-secondary" style="border-radius: 8px; width: 90px;" onchange="this.form.submit()">
+                    <option value="2026" {% if current_year == '2026' %}selected{% endif %}>2026</option>
+                    <option value="2025" {% if current_year == '2025' %}selected{% endif %}>2025</option>
+                    <option value="2024" {% if current_year == '2024' %}selected{% endif %}>2024</option>
+                </select>
+            </form>
+            
+            <div class="dropdown">
+                <button class="btn btn-dark btn-sm fw-bold px-3 shadow-sm dropdown-toggle" type="button" data-bs-toggle="dropdown" style="border-radius: 8px; padding: 6px 12px;">
+                    📊 Xuất báo cáo
+                </button>
+                <ul class="dropdown-menu shadow border-0" style="border-radius: 10px;">
+                    <li><a class="dropdown-item py-2 fw-semibold" href="{{ url_for('export_excel') }}"> Tải xuống file Excel (.xlsx)</a></li>
+                    <li><hr class="dropdown-divider"></li>
+                    <li><a class="dropdown-item py-2 fw-semibold" href="{{ url_for('export_pdf') }}" target="_blank">🖨️ In / Lưu file PDF</a></li>
+                </ul>
+            </div>
+        </div>
     </div>
-  </div>
-  <div class="col-lg-5">
-    <div class="card shadow-sm p-4">
-      <h4>Đơn hàng gần đây</h4>
-      {% if orders %}
-      <ul class="list-group list-group-flush">
-        {% for order in orders %}
-        <li class="list-group-item">
-          <strong>#{{ order.id }}</strong><br>
-          {{ order.fullname }} - {{ '{:,.0f}'.format(order.total_amount) }} đ<br>
-          <small class="text-muted">{{ order.created_at }}</small>
-        </li>
-        {% endfor %}
-      </ul>
-      {% else %}
-      <p class="text-muted">Chưa có đơn hàng mới.</p>
-      {% endif %}
+
+    <!-- CẢNH BÁO KHO HÀNG SẮP HẾT -->
+    {% if low_stock %}
+    <div class="alert alert-warning border-0 shadow-sm mb-4 d-flex align-items-center justify-content-between" style="border-radius: 14px;" role="alert">
+        <div class="d-flex align-items-center gap-3">
+            <span class="fs-4"></span>
+            <div>
+                <h6 class="fw-bold mb-1 text-dark">Cảnh báo tồn kho thấp!</h6>
+                <p class="small text-muted mb-0">Có <b>{{ low_stock|length }}</b> sản phẩm sắp hết hàng (dưới hoặc bằng 5 món): 
+                    {% for p in low_stock %}
+                        <span class="badge bg-danger text-white me-1">{{ p.name }} (Còn {{ p.stock }})</span>
+                    {% endfor %}
+                </p>
+            </div>
+        </div>
+        <a href="{{ url_for('admin_products') }}" class="btn btn-sm btn-dark fw-bold px-3 shadow-sm" style="border-radius: 8px;">Quản lý kho</a>
     </div>
-  </div>
+    {% endif %}
+
+    <!-- 4 THẺ THỐNG KÊ -->
+    <div class="row g-3 mb-4">
+        <div class="col-xl-3 col-md-6">
+            <div class="card p-3 shadow-sm bg-white stat-card h-100">
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                    <span class="text-muted text-uppercase fw-bold" style="font-size: 0.75rem;">Doanh thu (Tháng chọn)</span>
+                    <div class="icon-box bg-success-subtle text-success"></div>
+                </div>
+                <h5 class="fw-bold text-success mb-1">{{ '{:,.0f}'.format(monthly_revenue) }} đ</h5>
+                <span class="text-muted" style="font-size: 0.75rem;">Tính theo đơn hoàn thành</span>
+            </div>
+        </div>
+
+        <div class="col-xl-3 col-md-6">
+            <div class="card p-3 shadow-sm bg-white stat-card h-100">
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                    <span class="text-muted text-uppercase fw-bold" style="font-size: 0.75rem;">Tổng Đơn (Tháng chọn)</span>
+                    <div class="icon-box bg-primary-subtle text-primary"></div>
+                </div>
+                <h5 class="fw-bold text-dark mb-1">{{ monthly_orders_count }} đơn</h5>
+                <span class="text-primary fw-semibold" style="font-size: 0.75rem;"> Đã ghi nhận trong tháng</span>
+            </div>
+        </div>
+
+        <div class="col-xl-3 col-md-6">
+            <div class="card p-3 shadow-sm bg-white stat-card h-100">
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                    <span class="text-muted text-uppercase fw-bold" style="font-size: 0.75rem;">Sản phẩm sẵn bán</span>
+                    <div class="icon-box bg-warning-subtle text-warning"></div>
+                </div>
+                <h5 class="fw-bold text-dark mb-1">{{ products|length }} món</h5>
+                <span class="text-muted" style="font-size: 0.75rem;">Đủ các danh mục áo quần</span>
+            </div>
+        </div>
+
+        <div class="col-xl-3 col-md-6">
+            <div class="card p-3 shadow-sm bg-white stat-card h-100">
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                    <span class="text-muted text-uppercase fw-bold" style="font-size: 0.75rem;">Hiệu suất Shop</span>
+                    <div class="icon-box bg-info-subtle text-info"></div>
+                </div>
+                <h5 class="fw-bold text-dark mb-1">{{ '{:.1f}'.format(efficiency_rate) }}%</h5>
+                <span class="text-success fw-semibold" style="font-size: 0.75rem;">🟢 Hoạt động ổn định</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- BIỂU ĐỒ -->
+    <div class="row g-3 mb-4">
+        <div class="col-lg-5">
+            <div class="card p-4 shadow-sm bg-white h-100 d-flex flex-column justify-content-between">
+                <div>
+                    <h6 class="fw-bold text-dark mb-1">Doanh thu theo Danh mục</h6>
+                    <p class="text-muted small mb-3">Tỷ lệ đóng góp của từng loại trang phục</p>
+                </div>
+                <div class="position-relative mx-auto" style="width: 220px; height: 220px;">
+                    <canvas id="categoryChart"></canvas>
+                </div>
+                <div class="mt-3 text-center text-muted small">
+                    <span class="me-2">● Áo (60%)</span> <span class="me-2">● Quần (28%)</span> <span>● Váy (12%)</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-7">
+            <div class="card p-4 shadow-sm bg-white h-100 d-flex flex-column justify-content-between">
+                <div>
+                    <h6 class="fw-bold text-dark mb-1">Xu hướng Doanh thu</h6>
+                    <p class="text-muted small mb-3">Biểu đồ tăng trưởng dòng tiền qua các tháng</p>
+                </div>
+                <div style="height: 220px;">
+                    <canvas id="trendChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- BẢNG ĐƠN HÀNG MỚI NHẤT -->
+    <div class="card border-0 shadow-sm bg-white p-0" style="border-radius: 14px; overflow: hidden;">
+        <div class="p-3 px-4 border-bottom d-flex justify-content-between align-items-center bg-white">
+            <h6 class="fw-bold text-dark mb-0">Đơn hàng mới nhất</h6>
+            <a href="{{ url_for('admin_orders') }}" class="text-decoration-none fw-bold small text-primary">Xem tất cả →</a>
+        </div>
+        <div class="table-responsive">
+            <table class="table table-hover mb-0">
+                <thead>
+                    <tr>
+                        <th class="ps-4">Mã đơn</th>
+                        <th>Khách hàng</th>
+                        <th>Số điện thoại</th>
+                        <th>Tổng tiền</th>
+                        <th class="text-center pe-4">Trạng thái</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for o in orders %}
+                    <tr>
+                        <td class="ps-4 fw-bold text-primary">#ORD-{{ o.id }}</td>
+                        <td class="fw-semibold text-dark">{{ o.fullname }}</td>
+                        <td class="text-muted">{{ o.phone }}</td>
+                        <td class="fw-bold text-danger">{{ '{:,.0f}'.format(o.total_amount) }} đ</td>
+                        <td class="text-center pe-4">
+                            {% if o.status == 'Hoàn thành' %}
+                                <span class="badge bg-success-subtle text-success border border-success rounded-pill px-3 py-1">Hoàn thành</span>
+                            {% elif o.status == 'Đang giao' %}
+                                <span class="badge bg-primary-subtle text-primary border border-primary rounded-pill px-3 py-1">Đang giao</span>
+                            {% elif o.status == 'Đã hủy' %}
+                                <span class="badge bg-danger-subtle text-danger border border-danger rounded-pill px-3 py-1">Đã hủy</span>
+                            {% else %}
+                                <span class="badge bg-warning-subtle text-warning border border-warning rounded-pill px-3 py-1">Chờ xác nhận</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="5" class="text-center py-4 text-muted">Chưa có đơn hàng nào được ghi nhận.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
 </div>
+
+<script>
+    const ctxCategory = document.getElementById('categoryChart').getContext('2d');
+    new Chart(ctxCategory, {
+        type: 'doughnut',
+        data: {
+            labels: ['Áo sơ mi & Khoác', 'Quần jeans & Jogger', 'Váy & Set bộ'],
+            datasets: [{ data: [1450000, 700000, 300000], backgroundColor: ['#ff6384', '#36a2eb', '#ffce56'], borderWidth: 0 }]
+        },
+        options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, cutout: '75%' }
+    });
+
+    const ctxTrend = document.getElementById('trendChart').getContext('2d');
+    new Chart(ctxTrend, {
+        type: 'bar',
+        data: {
+            labels: ['Tháng 5', 'Tháng 6', 'Tháng 7', 'Tháng 8'],
+            datasets: [{ label: 'Doanh thu (đ)', data: [800000, 1200000, 1900000, 2450000], backgroundColor: ['#e2e8f0', '#cbd5e1', '#3b82f6', '#10b981'], borderRadius: 6 }]
+        },
+        options: {
+            responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } },
+            scales: { y: { beginAtZero: true, grid: { borderDash: [4, 4] } }, x: { grid: { display: false } } }
+        }
+    });
+</script>
 {% endblock %}

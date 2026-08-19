@@ -1,0 +1,14 @@
+# Python
+__pycache__/
+*.py[cod]
+venv/
+env/
+.env
+
+# Database/Configs
+*.db
+*.sqlite3
+config.py
+
+# Hệ điều hành
+.DS_Store

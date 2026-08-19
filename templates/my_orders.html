@@ -1,0 +1,168 @@
+{% extends 'layout.html' %}
+{% block content %}
+<style>
+    /* CSS Cân chỉnh thanh tiến trình xuyên qua tâm icon */
+    .timeline-wrapper { position: relative; padding: 10px 40px; }
+    .timeline-bg { 
+        position: absolute; top: 50px; left: 40px; right: 40px; 
+        height: 6px; z-index: 0; background: #e9ecef; border-radius: 3px;
+    }
+    .order-progress { 
+        position: absolute; top: 50px; left: 40px; 
+        height: 6px; z-index: 1; border-radius: 3px; transition: width 0.6s ease;
+    }
+    .order-progress-15 { width: 15%; }
+    .order-progress-25 { width: 35%; }
+    .order-progress-75 { width: 68%; }
+    .order-progress-100 { width: calc(100% - 80px); }
+</style>
+
+<div class="container-xl mt-4 mb-5">
+    
+    <!-- Tiêu đề và Thanh lọc theo ngày -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h3 class="fw-bold text-dark mb-0">Đơn hàng của tôi</h3>
+            <p class="text-muted small mb-0">Theo dõi lịch sử mua hàng và trạng thái đơn hàng của bạn</p>
+        </div>
+        
+        <!-- Form lọc theo ngày -->
+        <form method="GET" action="{{ url_for('my_orders') }}" class="d-flex gap-2 align-items-center bg-white p-2 rounded shadow-sm">
+            <label class="fw-bold small text-secondary mb-0">Chọn ngày:</label>
+            <input type="date" name="date" class="form-control form-control-sm border-secondary" value="{{ selected_date }}">
+            <button type="submit" class="btn btn-primary btn-sm px-3 fw-bold">Lọc</button>
+            {% if selected_date %}
+            <a href="{{ url_for('my_orders') }}" class="btn btn-outline-danger btn-sm">✖</a>
+            {% endif %}
+        </form>
+    </div>
+
+    {% if orders %}
+    <div class="d-flex flex-column gap-4">
+        {% for order in orders %}
+        <div class="card border-0 shadow-sm p-4 bg-white" style="border-radius: 16px;">
+            <div class="d-flex justify-content-between align-items-center border-bottom pb-3 mb-4">
+                <div>
+                    <span class="fw-bold text-primary fs-5">#ORD-{{ order.id }}</span>
+                    <span class="text-muted small ms-3">Ngày đặt: {{ order.created_at }}</span>
+                </div>
+                
+                <div class="d-flex gap-2">
+                    <!-- Nút mở QR thanh toán -->
+                    {% if order.payment_method == 'Chuyển khoản' and order.status == 'Chờ thanh toán' %}
+                        <a href="{{ url_for('payment_info', order_id=order.id) }}" class="btn btn-sm btn-primary fw-bold rounded-pill px-3 shadow-sm">Mở mã QR</a>
+                    {% endif %}
+                    
+                    <!-- NÚT KHÁCH HÀNG TỰ HỦY ĐƠN -->
+                    {% if order.status in ['Chờ thanh toán', 'Chờ xác nhận'] %}
+                        <form action="{{ url_for('cancel_order', order_id=order.id) }}" method="POST" onsubmit="return confirm('Bạn có chắc chắn muốn hủy đơn hàng này không?');">
+                            <button type="submit" class="btn btn-sm btn-outline-danger fw-bold rounded-pill px-3 shadow-sm">❌ Hủy đơn</button>
+                        </form>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- LOGIC TRẠNG THÁI -->
+            {% set progress_width = '0' %}
+            {% set progress_color = 'bg-primary' %}
+            {% if order.status == 'Chờ thanh toán' %}{% set progress_width = '15' %}{% set progress_color = 'bg-warning' %}
+            {% elif order.status == 'Chờ xác nhận' %}{% set progress_width = '25' %}
+            {% elif order.status == 'Đang giao' %}{% set progress_width = '75' %}
+            {% elif order.status == 'Hoàn thành' %}{% set progress_width = '100' %}{% set progress_color = 'bg-success' %}
+            {% elif order.status == 'Đã hủy' %}{% set progress_width = '100' %}{% set progress_color = 'bg-danger' %}
+            {% endif %}
+
+            {% set step1 = 'bg-primary text-white' if order.status in ['Chờ thanh toán', 'Chờ xác nhận', 'Đang giao', 'Hoàn thành'] else 'bg-secondary text-white' %}
+            {% set step2 = 'bg-primary text-white' if order.status in ['Đang giao', 'Hoàn thành'] else 'bg-secondary text-white' %}
+            {% set step3 = 'bg-success text-white' if order.status == 'Hoàn thành' else ('bg-danger text-white' if order.status == 'Đã hủy' else 'bg-secondary text-white') %}
+
+            <!-- TIMELINE -->
+            <div class="timeline-wrapper mb-3">
+                <div class="timeline-bg"></div>
+                <div class="order-progress order-progress-{{ progress_width }} {{ progress_color }}"></div>
+                
+                <div class="d-flex justify-content-between position-relative" style="z-index: 2;">
+                    <div class="text-center">
+                        <div class="rounded-circle {{ step1 }} d-flex align-items-center justify-content-center mx-auto mb-2 shadow-sm" style="width: 40px; height: 40px;">🛒</div>
+                        <span class="small fw-bold text-dark">Đặt hàng</span>
+                    </div>
+                    <div class="text-center">
+                        <div class="rounded-circle {{ step2 }} d-flex align-items-center justify-content-center mx-auto mb-2 shadow-sm" style="width: 40px; height: 40px;">📦</div>
+                        <span class="small fw-bold text-dark">Đang giao</span>
+                    </div>
+                    <div class="text-center">
+                        <div class="rounded-circle {{ step3 }} d-flex align-items-center justify-content-center mx-auto mb-2 shadow-sm" style="width: 40px; height: 40px;">
+                            {% if order.status == 'Đã hủy' %}❌{% else %}✅{% endif %}
+                        </div>
+                        <span class="small fw-bold text-dark">{% if order.status == 'Đã hủy' %}Đã hủy{% else %}Hoàn thành{% endif %}</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- SẢN PHẨM & NÚT ĐÁNH GIÁ -->
+            <div class="mb-3 mt-4">
+                {% for item in order.order_items %}
+                <div class="d-flex align-items-center justify-content-between py-3 border-bottom border-light">
+                    <div class="d-flex align-items-center gap-3">
+                        <img src="{{ item.image }}" class="rounded-3 border" style="width: 60px; height: 60px; object-fit: cover;">
+                        <div>
+                            <h6 class="fw-bold text-dark mb-0">{{ item.name }}</h6>
+                            <small class="text-muted">Số lượng: x{{ item.quantity }}</small>
+                        </div>
+                    </div>
+                    
+                    <div class="d-flex align-items-center gap-3">
+                        <span class="fw-bold text-dark">{{ '{:,.0f}'.format(item.unit_price * item.quantity) }} đ</span>
+                        
+                        <!-- NÚT ĐÁNH GIÁ VỚI LOGIC CHỐNG SPAM -->
+                        {% if order.status == 'Hoàn thành' and not current_user.is_admin and current_user.role != 'Nhân viên' %}
+                            {% if item.has_reviewed %}
+                                <button class="btn btn-secondary btn-sm rounded-pill px-3 fw-semibold shadow-sm" disabled>
+                                    ✅ Đã đánh giá
+                                </button>
+                            {% else %}
+                                <a href="{{ url_for('product_detail', product_id=item.product_id) }}" class="btn btn-outline-warning btn-sm rounded-pill px-3 fw-semibold shadow-sm">
+                                    ⭐ Đánh giá
+                                </a>
+                            {% endif %}
+                        {% endif %}
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+
+            <div class="text-end pt-2">
+                <span class="text-muted small">Tổng thanh toán: </span>
+                <span class="fw-bold text-success fs-5">{{ '{:,.0f}'.format(order.total_amount) }} đ</span>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+
+    <!-- PHÂN TRANG -->
+    {% if total_pages and total_pages > 1 %}
+    <nav aria-label="Page navigation" class="mt-4">
+        <ul class="pagination justify-content-center">
+            <li class="page-item {% if page == 1 %}disabled{% endif %}">
+                <a class="page-link shadow-sm" href="{{ url_for('my_orders', page=page-1, date=selected_date) }}">Trước</a>
+            </li>
+            {% for p in range(1, total_pages + 1) %}
+            <li class="page-item {% if p == page %}active{% endif %}">
+                <a class="page-link shadow-sm" href="{{ url_for('my_orders', page=p, date=selected_date) }}">{{ p }}</a>
+            </li>
+            {% endfor %}
+            <li class="page-item {% if page == total_pages %}disabled{% endif %}">
+                <a class="page-link shadow-sm" href="{{ url_for('my_orders', page=page+1, date=selected_date) }}">Sau</a>
+            </li>
+        </ul>
+    </nav>
+    {% endif %}
+
+    {% else %}
+    <div class="card border-0 shadow-sm text-center py-5 bg-white rounded-4">
+        <h5 class="text-muted mb-3">Bạn chưa có đơn hàng nào!</h5>
+        <a href="{{ url_for('index') }}" class="btn btn-primary rounded-pill px-4 fw-bold">Mua sắm ngay</a>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

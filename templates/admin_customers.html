@@ -1,45 +1,57 @@
 {% extends 'layout.html' %}
 {% block content %}
-<div class="d-flex justify-content-between align-items-center mb-4">
-  <div>
-    <h2>Quản lý khách hàng</h2>
-    <p class="text-muted">Theo dõi số đơn, số sản phẩm mua và tổng tiền mỗi khách.</p>
-  </div>
-</div>
-<div class="card shadow-sm p-4">
-  <div class="table-responsive">
-    <table class="table align-middle">
-      <thead class="table-light">
-        <tr>
-          <th>#</th>
-          <th>Khách hàng</th>
-          <th>Phone</th>
-          <th>Email</th>
-          <th>Số đơn</th>
-          <th>Tổng sản phẩm</th>
-          <th>Tổng tiền</th>
-          <th>Hành động</th>
-        </tr>
-      </thead>
-      <tbody>
-        {% for customer in customers %}
-        <tr>
-          <td>{{ loop.index }}</td>
-          <td>{{ customer.fullname }}</td>
-          <td>{{ customer.phone }}</td>
-          <td>{{ customer.email }}</td>
-          <td>{{ customer.order_count }}</td>
-          <td>{{ customer.total_items }}</td>
-          <td>{{ '{:,.0f}'.format(customer.total_spent) }} đ</td>
-          <td><a href="{{ url_for('admin_customer_detail', phone=customer.phone) }}" class="btn btn-sm btn-primary">Xem</a></td>
-        </tr>
-        {% else %}
-        <tr>
-          <td colspan="7" class="text-center text-muted">Chưa có khách hàng nào.</td>
-        </tr>
-        {% endfor %}
-      </tbody>
-    </table>
-  </div>
+
+<style>
+    body { background-color: #f8f9fc; }
+    .table th { color: #6c757d; font-weight: 600; font-size: 0.85rem; padding: 15px; border-bottom: 1px solid #edf2f9; background-color: #f8f9fc; }
+    .table td { vertical-align: middle; padding: 15px; border-bottom: 1px solid #edf2f9; color: #333; }
+</style>
+
+<div class="container-fluid mt-4 mb-5">
+    
+    <!-- Tiêu đề -->
+    <div class="mb-4">
+        <h3 class="fw-bold text-dark mb-1">Quản lý Khách hàng</h3>
+        <p class="text-muted small">Danh sách các thành viên đã phát sinh giao dịch mua sắm (Có tổng <b>{{ customers|length }}</b> khách hàng)</p> 
+    </div>
+
+    <!-- Bảng Danh sách Khách hàng (Lấy data thật từ DB) -->
+    <div class="card border-0 shadow-sm bg-white p-0" style="border-radius: 16px; overflow: hidden;">
+        <div class="table-responsive">
+            <table class="table table-hover mb-0">
+                <thead>
+                    <tr>
+                        <th class="ps-4">Khách hàng</th>
+                        <th>Số điện thoại</th>
+                        <th class="text-center">Số đơn</th>
+                        <th class="text-center">Tổng SP</th>
+                        <th class="text-end">Tổng tiền chi tiêu</th>
+                        <th class="text-center pe-4">Hành động</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for c in customers %}
+                    <tr>
+                        <td class="ps-4">
+                            <div class="fw-bold text-dark">{{ c.fullname }}</div>
+                            <div class="text-muted small">{{ c.email }}</div>
+                        </td>
+                        <td class="text-muted fw-medium">{{ c.phone }}</td>
+                        <td class="text-center fw-bold text-primary">{{ c.order_count }}</td>
+                        <td class="text-center text-muted">{{ c.total_items }}</td>
+                        <td class="text-end fw-bold text-success">{{ '{:,.0f}'.format(c.total_spent) }} đ</td>
+                        <td class="text-center pe-4">
+                            <a href="{{ url_for('admin_customer_detail', phone=c.phone) }}" class="btn btn-primary btn-sm rounded-pill px-3 shadow-sm fw-bold">Xem chi tiết</a>
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="6" class="text-center py-4 text-muted">Chưa có khách hàng nào đặt đơn.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
 </div>
 {% endblock %}

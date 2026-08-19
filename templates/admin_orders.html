@@ -1,43 +1,105 @@
 {% extends 'layout.html' %}
 {% block content %}
-<div class="d-flex justify-content-between align-items-center mb-4">
-  <div>
-    <h2>Danh sách đơn hàng</h2>
-    <p class="text-muted">Xem tất cả đơn hàng đã đặt.</p>
-  </div>
-</div>
-<div class="card shadow-sm p-4">
-  <div class="table-responsive">
-    <table class="table align-middle">
-      <thead class="table-light">
-        <tr>
-          <th>#</th>
-          <th>Khách</th>
-          <th>Phone</th>
-          <th>Email</th>
-          <th>Số sản phẩm</th>
-          <th>Tổng tiền</th>
-          <th>Ngày</th>
-        </tr>
-      </thead>
-      <tbody>
-        {% for order in orders %}
-        <tr>
-          <td>{{ order.id }}</td>
-          <td>{{ order.fullname }}</td>
-          <td>{{ order.phone }}</td>
-          <td>{{ order.email }}</td>
-          <td>{{ order.total_items }}</td>
-          <td>{{ '{:,.0f}'.format(order.total_amount) }} đ</td>
-          <td>{{ order.created_at }}</td>
-        </tr>
-        {% else %}
-        <tr>
-          <td colspan="7" class="text-center text-muted">Chưa có đơn hàng nào.</td>
-        </tr>
-        {% endfor %}
-      </tbody>
-    </table>
-  </div>
+<div class="container-xl mt-4 mb-5">
+    
+    <!-- Tiêu đề và Thanh lọc theo ngày -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h3 class="fw-bold text-dark">Quản lý Đơn hàng</h3>
+            <p class="text-muted small mb-0">Theo dõi và xử lý danh sách đơn đặt hàng của khách</p>
+        </div>
+        
+        <form method="GET" action="{{ url_for('admin_orders') }}" class="d-flex gap-2 align-items-center bg-white p-2 rounded shadow-sm">
+            <label class="fw-bold small text-secondary mb-0">Chọn ngày:</label>
+            <input type="date" name="date" class="form-control form-control-sm border-secondary" value="{{ selected_date }}">
+            <button type="submit" class="btn btn-primary btn-sm px-3 fw-bold">Lọc</button>
+            {% if selected_date %}
+            <a href="{{ url_for('admin_orders') }}" class="btn btn-outline-danger btn-sm">✖</a>
+            {% endif %}
+        </form>
+    </div>
+
+    <!-- Bảng danh sách đơn hàng -->
+    <div class="card border-0 shadow-sm rounded-4 overflow-hidden bg-white">
+        <div class="table-responsive">
+            <table class="table align-middle mb-0">
+                <thead class="table-light text-uppercase fs-7 text-secondary">
+                    <tr>
+                        <th class="py-3 ps-4">Mã đơn</th>
+                        <th class="py-3">Khách hàng & Liên hệ</th>
+                        <th class="py-3 text-center">Số lượng</th>
+                        <th class="py-3">Tổng tiền</th>
+                        <th class="py-3">Ngày đặt</th>
+                        <th class="py-3 text-end pe-4">Trạng thái</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% if orders_data %}
+                        {% for item in orders_data %}
+                        {% set order = item.order %}
+                        <tr>
+                            <td class="ps-4 fw-bold text-primary">#ORD-{{ order.id }}</td>
+                            <td>
+                                <div class="fw-bold text-dark">{{ order.fullname }}</div>
+                                <div class="text-muted small">📞 {{ order.phone }} | ✉️ {{ order.email }}</div>
+                                <div class="text-secondary small fst-italic">📍 {{ order.address }}</div>
+                            </td>
+                            <td class="text-center">
+                                <span class="badge bg-secondary rounded-pill">{{ item.item_count }}</span>
+                            </td>
+                            <td class="fw-bold text-danger">{{ '{:,.0f}'.format(order.total_amount) }} đ</td>
+                            <td class="text-muted small">{{ order.created_at }}</td>
+                            
+                            
+                            <td class="text-end pe-4">
+                                {% if order.status == 'Đã hủy' %}
+                                    <span class="badge bg-danger rounded-pill px-3 py-2">Đã hủy </span>
+                                {% else %}
+                                    <form action="{{ url_for('update_order_status', order_id=order.id) }}" method="POST">
+                                        <select name="status" class="form-select form-select-sm d-inline-block w-auto fw-semibold 
+                                            {% if order.status == 'Hoàn thành' %}text-success bg-success-subtle border-success
+                                            {% elif order.status == 'Đang giao' %}text-primary bg-primary-subtle border-primary
+                                            {% else %}text-warning bg-warning-subtle border-warning{% endif %}" 
+                                            onchange="this.form.submit()">
+                                            <option value="Chờ xác nhận" {% if order.status == 'Chờ xác nhận' %}selected{% endif %}>Chờ xác nhận</option>
+                                            <option value="Chờ thanh toán" {% if order.status == 'Chờ thanh toán' %}selected{% endif %}>Chờ thanh toán</option>
+                                            <option value="Đang giao" {% if order.status == 'Đang giao' %}selected{% endif %}>Đang giao</option>
+                                            <option value="Hoàn thành" {% if order.status == 'Hoàn thành' %}selected{% endif %}>Hoàn thành</option>
+                                            <option value="Đã hủy" {% if order.status == 'Đã hủy' %}selected{% endif %}>Đã hủy</option>
+                                        </select>
+                                    </form>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    {% else %}
+                        <tr>
+                            <td colspan="6" class="text-center py-5 text-muted">Không có đơn hàng nào trong ngày này.</td>
+                        </tr>
+                    {% endif %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Phân trang -->
+    {% if total_pages and total_pages > 1 %}
+    <nav aria-label="Page navigation" class="mt-4">
+        <ul class="pagination justify-content-center">
+            <li class="page-item {% if page == 1 %}disabled{% endif %}">
+                <a class="page-link shadow-sm" href="{{ url_for('admin_orders', page=page-1, date=selected_date) }}">Trước</a>
+            </li>
+            {% for p in range(1, total_pages + 1) %}
+            <li class="page-item {% if p == page %}active{% endif %}">
+                <a class="page-link shadow-sm" href="{{ url_for('admin_orders', page=p, date=selected_date) }}">{{ p }}</a>
+            </li>
+            {% endfor %}
+            <li class="page-item {% if page == total_pages %}disabled{% endif %}">
+                <a class="page-link shadow-sm" href="{{ url_for('admin_orders', page=page+1, date=selected_date) }}">Sau</a>
+            </li>
+        </ul>
+    </nav>
+    {% endif %}
+
 </div>
 {% endblock %}

@@ -1,44 +1,62 @@
 {% extends 'layout.html' %}
 {% block content %}
-<div class="row justify-content-center">
-  <div class="col-lg-8">
-    <div class="card shadow-sm p-4">
-      <h2>{{ action }}</h2>
-      <form method="post">
-        {{ form.hidden_tag() }}
-        <div class="mb-3">
-          {{ form.name.label(class_='form-label') }}
-          {{ form.name(class_='form-control') }}
+<div class="container-xl mt-4 mb-5">
+  <div class="row justify-content-center">
+    <div class="col-lg-8">
+      <div class="card border-0 shadow-sm" style="border-radius: 16px;">
+        <div class="card-header bg-white border-bottom-0 pt-4 pb-2 px-4">
+          <h4 class="fw-bold text-dark mb-0">{{ action }}</h4>
+          <p class="text-muted small">Điền đầy đủ thông tin bên dưới để cập nhật gian hàng</p>
         </div>
-        <div class="row">
-          <div class="col-md-6 mb-3">
-            {{ form.price.label(class_='form-label') }}
-            {{ form.price(class_='form-control') }}
-          </div>
-          <div class="col-md-6 mb-3">
-            {{ form.stock.label(class_='form-label') }}
-            {{ form.stock(class_='form-control') }}
-          </div>
+        <div class="card-body p-4">
+          <form method="post">
+            {{ form.hidden_tag() }}
+            
+            <div class="mb-4">
+              <label class="form-label fw-semibold text-secondary small">Tên sản phẩm</label>
+              {{ form.name(class_='form-control bg-light border-0 py-2', placeholder='VD: Áo thun nam cao cấp...') }}
+            </div>
+
+            <div class="row mb-4">
+              <div class="col-md-6">
+                <label class="form-label fw-semibold text-secondary small">Giá bán (VNĐ)</label>
+                {{ form.price(class_='form-control bg-light border-0 py-2') }}
+              </div>
+              <div class="col-md-6 mt-3 mt-md-0">
+                <label class="form-label fw-semibold text-secondary small">Số lượng kho</label>
+                {{ form.stock(class_='form-control bg-light border-0 py-2') }}
+              </div>
+            </div>
+
+            <div class="row mb-4">
+              <div class="col-md-6">
+                <label class="form-label fw-semibold text-secondary small">Danh mục</label>
+                {{ form.category(class_='form-control bg-light border-0 py-2', placeholder='Áo, Quần, Váy...') }}
+              </div>
+              <div class="col-md-6 mt-3 mt-md-0">
+                <label class="form-label fw-semibold text-secondary small">Link Ảnh (URL)</label>
+                {{ form.image(class_='form-control bg-light border-0 py-2', placeholder='https://...') }}
+              </div>
+            </div>
+
+            <div class="mb-4">
+              <label class="form-label fw-semibold text-secondary small">Mô tả chi tiết</label>
+              {{ form.description(class_='form-control bg-light border-0 py-2', rows='4') }}
+            </div>
+
+            <div class="form-check form-switch mb-4">
+              {{ form.is_featured(class_='form-check-input fs-5', id='featuredSwitch') }}
+              <label class="form-check-label fw-semibold ms-2 mt-1 text-dark" for="featuredSwitch">Đánh dấu là Sản phẩm Nổi bật (Hiển thị đầu trang)</label>
+            </div>
+
+            <hr class="text-muted opacity-25">
+            <div class="d-flex gap-2 justify-content-end mt-4">
+              <a href="{{ url_for('admin_products') }}" class="btn btn-light fw-bold px-4 rounded-pill">Hủy bỏ</a>
+              <button type="submit" class="btn btn-primary fw-bold px-5 rounded-pill shadow-sm">Lưu thông tin</button>
+            </div>
+          </form>
         </div>
-        <div class="mb-3">
-          {{ form.category.label(class_='form-label') }}
-          {{ form.category(class_='form-control') }}
-        </div>
-        <div class="mb-3">
-          {{ form.image.label(class_='form-label') }}
-          {{ form.image(class_='form-control') }}
-        </div>
-        <div class="mb-3">
-          {{ form.description.label(class_='form-label') }}
-          {{ form.description(class_='form-control', rows='4') }}
-        </div>
-        <div class="form-check form-switch mb-3">
-          {{ form.is_featured(class_='form-check-input') }}
-          {{ form.is_featured.label(class_='form-check-label') }}
-        </div>
-        <button type="submit" class="btn btn-primary">Lưu</button>
-        <a href="{{ url_for('admin_dashboard') }}" class="btn btn-secondary ms-2">Hủy</a>
-      </form>
+      </div>
     </div>
   </div>
 </div>

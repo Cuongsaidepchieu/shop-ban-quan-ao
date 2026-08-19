@@ -31,6 +31,12 @@ body {
 .product-card:hover {
   transform: translateY(-4px);
   transition: transform .25s ease;
+  cursor: pointer;
+}
+
+.card .btn,
+.card a.btn {
+  cursor: pointer;
 }
 
 .cart-image {
@@ -64,3 +70,16 @@ footer {
   border-radius: 12px;
   margin-bottom: 8px;
 }
+
+.order-progress {
+  height: 4px;
+  z-index: 1;
+  transform: translateY(-50%);
+  transition: 0.5s;
+}
+
+.order-progress-0 { width: 0%; }
+.order-progress-15 { width: 15%; }
+.order-progress-25 { width: 25%; }
+.order-progress-75 { width: 75%; }
+.order-progress-100 { width: 100%; }

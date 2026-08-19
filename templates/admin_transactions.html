@@ -1,0 +1,107 @@
+{% extends 'layout.html' %}
+{% block content %}
+<div class="container-xl mt-4 mb-5">
+    
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h3 class="fw-bold text-dark">Lịch sử Giao dịch</h3>
+            <p class="text-muted small mb-0">Sao kê chi tiết dòng tiền thu vào từ các đơn hàng thành công</p>
+        </div>
+        
+        <!-- Form lọc theo ngày -->
+        <form method="GET" action="{{ url_for('admin_transactions') }}" class="d-flex gap-2 align-items-center">
+            <label class="fw-bold small text-secondary mb-0">Chọn ngày:</label>
+            <input type="date" name="date" class="form-control form-control-sm border-secondary" value="{{ selected_date }}">
+            <button type="submit" class="btn btn-primary btn-sm px-3 fw-bold">Lọc</button>
+            {% if selected_date %}
+            <a href="{{ url_for('admin_transactions') }}" class="btn btn-outline-danger btn-sm">✖</a>
+            {% endif %}
+        </form>
+    </div>
+
+    <!-- 3 Ô TỔNG KẾT DOANH THU THEO NGÀY (Hoặc tổng tất cả nếu không chọn ngày) -->
+    <div class="row g-3 mb-4">
+        <div class="col-md-4">
+            <div class="card border-0 shadow-sm p-3 rounded-4">
+                <span class="text-muted small text-uppercase fw-bold">Tổng Doanh Thu {{ 'Ngày ' + selected_date if selected_date else '(Tất cả)' }}</span>
+                <h4 class="fw-bold text-success mt-2 mb-0">{{ '{:,.0f}'.format(total_revenue) }} đ</h4>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card border-0 shadow-sm p-3 rounded-4">
+                <span class="text-muted small text-uppercase fw-bold">Số Sản Phẩm Bán Ra</span>
+                <h4 class="fw-bold text-primary mt-2 mb-0">{{ total_products_sold }} món</h4>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card border-0 shadow-sm p-3 rounded-4">
+                <span class="text-muted small text-uppercase fw-bold">Tổng Số Đơn Hoàn Thành</span>
+                <h4 class="fw-bold text-warning mt-2 mb-0">{{ total_orders_count }} đơn</h4>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bảng danh sách giao dịch -->
+    <div class="card border-0 shadow-sm rounded-4 overflow-hidden">
+        <div class="table-responsive">
+            <table class="table align-middle mb-0">
+                <thead class="table-light text-uppercase fs-7 text-secondary">
+                    <tr>
+                        <th class="py-3 ps-4">Mã GD</th>
+                        <th class="py-3">Thời gian</th>
+                        <th class="py-3">Nội dung / Đối tác</th>
+                        <th class="py-3">Loại</th>
+                        <th class="py-3">Số tiền</th>
+                        <th class="py-3 text-end pe-4">Trạng thái</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% if transactions %}
+                        {% for tx in transactions %}
+                        <tr>
+                            <td class="ps-4 fw-bold text-primary">#ORD-{{ tx.id }}</td>
+                            <td class="text-muted small">{{ tx.created_at }}</td>
+                            <td>
+                                <div class="fw-semibold text-dark">Thanh toán đơn hàng (Khách: {{ tx.fullname }})</div>
+                                <div class="text-muted small">PTTT: {{ tx.payment_method }}</div>
+                            </td>
+                            <td>
+                                <span class="badge bg-success-subtle text-success border border-success fw-semibold px-2 py-1">Thu tiền</span>
+                            </td>
+                            <td class="fw-bold text-success">+ {{ '{:,.0f}'.format(tx.total_amount) }} đ</td>
+                            <td class="text-end pe-4">
+                                <span class="badge bg-success">✓ Hoàn thành</span>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    {% else %}
+                        <tr>
+                            <td colspan="6" class="text-center py-5 text-muted">Không có dữ liệu giao dịch nào cho ngày này.</td>
+                        </tr>
+                    {% endif %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Phân trang -->
+    {% if total_pages and total_pages > 1 %}
+    <nav aria-label="Page navigation" class="mt-4">
+        <ul class="pagination justify-content-center">
+            <li class="page-item {% if page == 1 %}disabled{% endif %}">
+                <a class="page-link shadow-sm" href="{{ url_for('admin_transactions', page=page-1, date=selected_date) }}">Trước</a>
+            </li>
+            {% for p in range(1, total_pages + 1) %}
+            <li class="page-item {% if p == page %}active{% endif %}">
+                <a class="page-link shadow-sm" href="{{ url_for('admin_transactions', page=p, date=selected_date) }}">{{ p }}</a>
+            </li>
+            {% endfor %}
+            <li class="page-item {% if page == total_pages %}disabled{% endif %}">
+                <a class="page-link shadow-sm" href="{{ url_for('admin_transactions', page=page+1, date=selected_date) }}">Sau</a>
+            </li>
+        </ul>
+    </nav>
+    {% endif %}
+
+</div>
+{% endblock %}

@@ -1,0 +1,78 @@
+{% extends 'layout.html' %}
+{% block content %}
+<style>
+    body { background-color: #f8f9fc; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+    .card { border-radius: 14px; border: 1px solid #eaedf2; }
+    .table th { color: #6c757d; font-weight: 600; font-size: 0.8rem; padding: 15px 16px; background-color: #f8f9fc; border-bottom: 1px solid #eaedf2; text-transform: uppercase; }
+    .table td { vertical-align: middle; padding: 15px 16px; color: #333; font-size: 0.9rem; border-bottom: 1px solid #f1f3f5; }
+</style>
+
+<div class="container-xl mt-4 mb-5">
+    
+    <!-- Tiêu đề & Nút thêm -->
+    <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center mb-4 gap-3">
+        <div>
+            <h4 class="fw-bold text-dark mb-1"> Quản lý Sản phẩm</h4>
+            <p class="text-muted small mb-0">Danh sách toàn bộ quần áo, phụ kiện đang bán tại cửa hàng</p>
+        </div>
+        <div>
+            <a href="{{ url_for('admin_add_product') }}" class="btn btn-dark btn-sm fw-bold px-3 shadow-sm" style="border-radius: 8px;">+ Thêm sản phẩm mới</a>
+        </div>
+    </div>
+
+    <!-- BẢNG QUẢN LÝ SẢN PHẨM -->
+    <div class="card border-0 shadow-sm bg-white p-0" style="border-radius: 14px; overflow: hidden;">
+        <div class="table-responsive">
+            <table class="table table-hover mb-0 align-middle">
+                <thead>
+                    <tr>
+                        <th class="ps-4" width="80">Ảnh</th>
+                        <th>Tên sản phẩm</th>
+                        <th>Danh mục</th>
+                        <th>Giá bán</th>
+                        <th class="text-center">Kho</th>
+                        <th class="text-center pe-4">Thao tác</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for p in products %}
+                    <tr>
+                        <td class="ps-4">
+                            <img src="{{ p.image }}" alt="{{ p.name }}" class="rounded shadow-sm border" style="width: 50px; height: 50px; object-fit: cover;">
+                        </td>
+                        <td>
+                            <div class="fw-bold text-dark">{{ p.name }}</div>
+                            {% if p.is_featured %}
+                                <span class="badge bg-warning-subtle text-warning border border-warning rounded-pill mt-1" style="font-size: 0.65rem;">Nổi bật</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <span class="badge bg-secondary-subtle text-secondary border rounded-pill">{{ p.category }}</span>
+                        </td>
+                        <td class="fw-bold text-danger">{{ '{:,.0f}'.format(p.price) }} đ</td>
+                        <td class="text-center">
+                            {% if p.stock > 0 %}
+                                <span class="fw-bold text-success">{{ p.stock }}</span>
+                            {% else %}
+                                <span class="badge bg-danger rounded-pill">Hết</span>
+                            {% endif %}
+                        </td>
+                        <td class="text-center pe-4">
+                            <a href="{{ url_for('admin_edit_product', product_id=p.id) }}" class="btn btn-outline-primary btn-sm px-3 rounded-pill fw-bold" style="font-size: 0.75rem;">Sửa</a>
+                            <a href="{{ url_for('admin_delete_product', product_id=p.id) }}" class="btn btn-outline-danger btn-sm px-3 rounded-pill fw-bold" style="font-size: 0.75rem;" onclick="return confirm('Bạn có chắc chắn muốn xóa sản phẩm này không?');">Xóa</a>
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="6" class="text-center py-5 text-muted">Chưa có sản phẩm nào trong kho.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        <div class="p-3 border-top bg-light text-muted small">
+            Tổng cộng có <b>{{ products|length }}</b> sản phẩm.
+        </div>
+    </div>
+</div>
+{% endblock %}
